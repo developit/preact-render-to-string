@@ -33,17 +33,18 @@ export let isLargeString = (s, length, ignoreLines) => (String(s).length>(length
 // Convert an Object style to a CSSText string
 export function styleObjToCss(s) {
 	let str = '';
+	let del = '';
 	for (let prop in s) {
 		let val = s[prop];
 		if (val!=null) {
-			if (str) str += ' ';
+			str += del;
 			str += jsToCss(prop);
-			str += ': ';
+			str += ':';
 			str += val;
 			if (typeof val==='number' && !NON_DIMENSION_PROPS[prop]) {
 				str += 'px';
 			}
-			str += ';';
+			del = ';';
 		}
 	}
 	return str || undefined;

@@ -100,7 +100,7 @@ describe('render', () => {
 
 		it('should serialize object styles', () => {
 			let rendered = render(<div style={{ color:'red', border:'none' }} />),
-				expected = `<div style="color: red; border: none;"></div>`;
+				expected = `<div style="color:red;border:none"></div>`;
 
 			expect(rendered).to.equal(expected);
 		});
