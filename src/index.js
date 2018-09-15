@@ -18,6 +18,7 @@ const VOID_ELEMENTS = /^(area|base|br|col|embed|hr|img|input|link|meta|param|sou
  *	@param {Boolean} [options.shallow=false]	If `true`, renders nested Components as HTML elements (`<Foo a="b" />`).
  *	@param {Boolean} [options.xml=false]		If `true`, uses self-closing tags for elements without children.
  *	@param {Boolean} [options.pretty=false]		If `true`, adds whitespace for readability
+ *	@param {string[]} [options.alwaysRenderedComponents=[]]	List of components that should be rendered with shallow rendering
  */
 renderToString.render = renderToString;
 
@@ -31,7 +32,6 @@ renderToString.render = renderToString;
  */
 let shallowRender = (vnode, context) => renderToString(vnode, context, SHALLOW);
 
-
 /** The default export is an alias of `render()`. */
 function renderToString(vnode, context, opts, inner, isSvgMode) {
 	if (vnode==null || typeof vnode==='boolean') {
@@ -43,6 +43,7 @@ function renderToString(vnode, context, opts, inner, isSvgMode) {
 		isComponent = false;
 	context = context || {};
 	opts = opts || {};
+	opts.alwaysRenderedComponents = opts.alwaysRenderedComponents || [];
 
 	let pretty = ENABLE_PRETTY && opts.pretty,
 		indentChar = pretty && typeof pretty==='string' ? pretty : '\t';
@@ -54,9 +55,12 @@ function renderToString(vnode, context, opts, inner, isSvgMode) {
 
 	// components
 	if (typeof nodeName==='function') {
+		let componentName = getComponentName(nodeName);
 		isComponent = true;
-		if (opts.shallow && (inner || opts.renderRootComponent===false)) {
-			nodeName = getComponentName(nodeName);
+		if (opts.shallow &&
+			(inner || opts.renderRootComponent===false) &&
+			opts.alwaysRenderedComponents.indexOf(componentName)===-1) {
+			nodeName = componentName;
 		}
 		else {
 			let props = getNodeProps(vnode),

@@ -571,7 +571,7 @@ describe('render', () => {
 			expect(renderXml(<div foo={false} bar={0} />)).to.equal(`<div bar="0" />`);
 		});
 	});
-	
+
 	describe('state locking', () => {
 		it('should set _disable and __x to true', () => {
 			let inst;
@@ -584,9 +584,9 @@ describe('render', () => {
 					return <div />;
 				}
 			}
-			
+
 			expect(render(<Foo />)).to.equal('<div></div>');
-			
+
 			expect(inst).to.have.property('_disable', true);
 			expect(inst).to.have.property('__x', true);
 		});
@@ -604,9 +604,9 @@ describe('render', () => {
 					return <Bar count={++count} />;
 				}
 			}
-			
+
 			expect(render(<Foo />)).to.equal('<div></div>');
-			
+
 			expect(Bar).to.have.been.calledOnce.and.calledWithMatch({ count: 1 });
 		});
 	});

@@ -5,6 +5,7 @@ declare module render {
     shallow:boolean;
     xml:boolean;
     pretty:boolean;
+    alwaysRenderedComponents: Array[String];
   }
 
   function render(vnode:VNode, context?:any, options?:Options):string;
