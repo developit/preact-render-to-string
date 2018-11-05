@@ -65,24 +65,34 @@ function renderToString(vnode, context, opts, inner, isSvgMode) {
 			if (!nodeName.prototype || typeof nodeName.prototype.render!=='function') {
 				// stateless functional components
 				rendered = nodeName(props, context);
+				return renderToString(rendered, context, opts, opts.shallowHighOrder!==false);
 			}
-			else {
-				// class-based components
-				let c = new nodeName(props, context);
-				// turn off stateful re-rendering:
-				c._disable = c.__x = true;
-				c.props = props;
-				c.context = context;
-				if (nodeName.getDerivedStateFromProps) c.state = assign(assign({}, c.state), nodeName.getDerivedStateFromProps(c.props, c.state));
-				else if (c.componentWillMount) c.componentWillMount();
+			
+			// class-based components
+			let c = new nodeName(props, context);
+			// turn off stateful re-rendering:
+			c._disable = c.__x = true;
+			c.props = props;
+			c.context = context;
+			if (nodeName.getDerivedStateFromProps) c.state = assign(assign({}, c.state), nodeName.getDerivedStateFromProps(c.props, c.state));
+			else if (c.componentWillMount) c.componentWillMount();
+			rendered = c.render(c.props, c.state, c.context);
+
+			if (c.getChildContext) {
+				context = assign(assign({}, context), c.getChildContext());
+			}
+
+			try {
+				return renderToString(rendered, context, opts, opts.shallowHighOrder!==false);
+			}
+			catch (error) {
+				// error boundary
+				if (nodeName.getDerivedStateFromError) c.state = assign(assign({}, c.state), nodeName.getDerivedStateFromError(error));
+				else if (c.componentDidCatch) c.componentDidCatch(error);
+				else throw error;
 				rendered = c.render(c.props, c.state, c.context);
-
-				if (c.getChildContext) {
-					context = assign(assign({}, context), c.getChildContext());
-				}
+				return renderToString(rendered, context, opts, opts.shallowHighOrder!==false);
 			}
-
-			return renderToString(rendered, context, opts, opts.shallowHighOrder!==false);
 		}
 	}
 
