@@ -59,7 +59,7 @@ function renderToString(vnode, context, opts, inner, isSvgMode) {
 			nodeName = getComponentName(nodeName);
 		}
 		else {
-			let rendered;
+			let c, rendered;
 
 			if (!nodeName.prototype || typeof nodeName.prototype.render!=='function') {
 				// stateless functional components
@@ -67,7 +67,7 @@ function renderToString(vnode, context, opts, inner, isSvgMode) {
 			}
 			else {
 				// class-based components
-				let c = new nodeName(props, context);
+				c = new nodeName(props, context);
 				// turn off stateful re-rendering:
 				c._dirty = c.__d = true;
 				c.props = props;
@@ -81,7 +81,17 @@ function renderToString(vnode, context, opts, inner, isSvgMode) {
 				}
 			}
 
-			return renderToString(rendered, context, opts, opts.shallowHighOrder!==false);
+			try {
+				return renderToString(rendered, context, opts, opts.shallowHighOrder!==false);
+			}
+			catch (error) {
+				if (c && c.componentDidCatch) {
+					c.componentDidCatch(error);
+					rendered = c.render(c.props, c.state, c.context);
+					return renderToString(rendered, context, opts, opts.shallowHighOrder!==false);
+				}
+				throw error;
+			}
 		}
 	}
 
