@@ -7,6 +7,8 @@ Render JSX and [Preact] components to an HTML string.
 
 Works in Node & the browser, making it useful for universal/isomorphic rendering.
 
+Supports rendering to a Node.js stream using `renderToNodeStream`.
+
 \>\> **[Cute Fox-Related Demo](http://codepen.io/developit/pen/dYZqjE?editors=001)** _(@ CodePen)_ <<
 
 
@@ -86,6 +88,22 @@ app.get('/:fox', (req, res) => {
 	let html = render(<Fox name={req.params.fox} />);
 	// send it back wrapped up as an HTML5 document:
 	res.send(`<!DOCTYPE html><html><body>${html}</body></html>`);
+});
+```
+
+
+### Render JSX / Preact / Whatever to a Node.js stream
+
+```js
+import { renderToNodeStream } from 'preact-render-to-string/stream';
+import { h } from 'preact';
+/** @jsx h */
+
+let vdom = <div class="foo">content</div>;
+
+let stream = renderToNodeStream(vdom);
+stream.on('data', (chunk) => {
+	console.log(chunk.toString('utf8')); // '<div', ' class="foo"', '>', 'content', '</div>'
 });
 ```
 

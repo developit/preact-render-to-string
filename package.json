@@ -8,11 +8,12 @@
   "module": "dist/index.module.js",
   "jsnext:main": "dist/index.module.js",
   "scripts": {
-    "build": "npm run -s transpile && npm run -s transpile:jsx && npm run -s copy-typescript-definition",
+    "build": "npm run -s transpile && npm run -s transpile:jsx && npm run -s transpile:stream && npm run -s copy-typescript-definition",
     "transpile": "echo 'export const ENABLE_PRETTY = false;'>env.js && microbundle src/index.js -f es,umd --target web --external preact",
     "transpile:jsx": "echo 'export const ENABLE_PRETTY = true;'>env.js && microbundle src/jsx.js -o dist/jsx.js --target web --external none && microbundle dist/jsx.js -o dist/jsx.js -f cjs",
+    "transpile:stream": "echo 'export const ENABLE_PRETTY = true;'>env.js && microbundle dist/stream.js --external preact,stream -o dist/stream.js -f cjs",
     "copy-typescript-definition": "copyfiles -f src/index.d.ts dist",
-    "test": "eslint src test && mocha --compilers js:babel-register test/**/*.js",
+    "test": "eslint src test && mocha --compilers js:@babel/register test/**/*.js",
     "prepublish": "npm run build",
     "release": "npm run build && git commit -am $npm_package_version && git tag $npm_package_version && git push && git push --tags && npm publish"
   },
@@ -40,16 +41,23 @@
   },
   "babel": {
     "presets": [
-      "env"
+      [
+        "@babel/env",
+        {
+          "exclude": [
+            "@babel/plugin-transform-regenerator"
+          ]
+        }
+      ]
     ],
     "plugins": [
       [
-        "transform-react-jsx",
+        "@babel/transform-react-jsx",
         {
           "pragma": "h"
         }
       ],
-      "transform-object-rest-spread"
+      "@babel/proposal-object-rest-spread"
     ]
   },
   "author": "Jason Miller <jason@developit.ca>",
@@ -62,10 +70,11 @@
     "preact": ">=10 || ^10.0.0-alpha.0 || ^10.0.0-beta.0"
   },
   "devDependencies": {
-    "babel-plugin-transform-object-rest-spread": "^6.26.0",
-    "babel-plugin-transform-react-jsx": "^6.24.1",
-    "babel-preset-env": "^1.7.0",
-    "babel-register": "^6.26.0",
+    "@babel/core": "^7.4.4",
+    "@babel/plugin-proposal-object-rest-spread": "^7.4.4",
+    "@babel/plugin-transform-react-jsx": "^7.3.0",
+    "@babel/preset-env": "^7.4.4",
+    "@babel/register": "^7.4.4",
     "chai": "^3.5.0",
     "copyfiles": "^1.2.0",
     "eslint": "^4.19.1",
