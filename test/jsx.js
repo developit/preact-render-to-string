@@ -5,7 +5,7 @@ import sinonChai from 'sinon-chai';
 chai.use(sinonChai);
 
 // tag to remove leading whitespace from tagged template literal
-export function dedent([str]) {
+function dedent([str]) {
 	return str.split( '\n'+str.match(/^\n*(\s+)/)[1] ).join('\n').replace(/(^\n+|\n+\s*$)/g, '');
 }
 
