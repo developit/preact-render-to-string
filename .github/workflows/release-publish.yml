@@ -1,0 +1,65 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        # checkout whatever was selected in GH while creating the release
+        # Note that this current MUST be a branch, see TODO below
+        ref: ${{ github.event.release.target_commitish }}
+    - name: fetch all tags
+      run: git fetch --tags
+      # ensure no commits were added to target_commitish between creating the release and the checkout
+    - name: ensure no commits were added to target_commitish
+      run: |
+        if [[ "$(git rev-list tags/${{ github.event.release.tag_name }} | head -n 1)" != "$(git rev-list ${{ github.event.release.target_commitish }} | head -n 1)" ]]; then
+          echo "Branch ${{ github.event.release.target_commitish }} is not in sync with tag ${{ github.event.release.tag_name }} !"
+          exit 1
+        fi
+    - name: Use Node.js 12
+      uses: actions/setup-node@v1
+      with:
+        node-version: 12.x
+    - run: npm install
+    - run: npm run build
+    - run: npm test
+      env:
+        CI: true
+    - name: configure git user
+      run: |
+        git config --global user.email "bot@preactjs.com"
+        git config --global user.name "preact bot"
+    # Delete the existing tag as npm can't override git tags
+    - run: git tag -d "${{ github.event.release.tag_name }}"
+    # Bump the version in package.json
+    - run: npm version "${{ github.event.release.tag_name }}"
+    # Create a release archive
+    - run: npm pack
+    # Store the archive's path in an env var
+    - run: echo "::set-env name=ASSET_PATH::$(ls preact-render-to-string-*.tgz)"
+    # Upload the release archive to GH
+    - name: Upload Release Asset
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./${{ env.ASSET_PATH }}
+        asset_name: ${{ env.ASSET_PATH }}
+        asset_content_type: application/zip
+    # re-tag the commit as npm pre-prends a v to the tag and we might tag without the v in github
+    - run: git tag -f "${{ github.event.release.tag_name }}"
+    # push the changes on our current branch
+    # TODO: this will fail if target_commitish is not a branch but rather a SHA
+    # TODO: this will fail if target_commitish received new commits in the meantime, but that's kinda "expected behaviour"
+    - run: git push origin ${{ github.event.release.target_commitish }}
+    # force push the existing tag to GH
+    - run: git push --force origin refs/tags/${{ github.event.release.tag_name }}:refs/tags/${{ github.event.release.tag_name }}
